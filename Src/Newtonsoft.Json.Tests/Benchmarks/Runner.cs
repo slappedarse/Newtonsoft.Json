@@ -20,6 +20,7 @@ namespace Newtonsoft.Json.Tests.Benchmarks
     public class Runner : TestFixtureBase
     {
         [Test]
+        [Ignore("Don't run with other unit tests")]
         public void RunBenchmarks()
         {
             new BenchmarkSwitcher(typeof(Runner).GetTypeInfo().Assembly).Run(new []{ "*" });
