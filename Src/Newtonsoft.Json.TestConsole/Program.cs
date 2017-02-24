@@ -46,9 +46,12 @@ namespace Newtonsoft.Json.TestConsole
         {
             //new BenchmarkSwitcher(typeof(Runner).GetTypeInfo().Assembly).Run(new[] { "*" });
             new BenchmarkSwitcher(new [] { typeof(LargeJArrayBenchmarks) }).Run(new[] { "*" });
-            
-            return;
 
+            //OldTimeyBenchmark();
+        }
+
+        private static void OldTimeyBenchmark()
+        {
             Console.WriteLine("Json.NET Test Console");
 
             string version = FileVersionInfo.GetVersionInfo(typeof(JsonConvert).Assembly.Location).FileVersion;
