@@ -45,7 +45,7 @@ namespace Newtonsoft.Json.TestConsole
         public static void Main(string[] args)
         {
             //new BenchmarkSwitcher(typeof(Runner).GetTypeInfo().Assembly).Run(new[] { "*" });
-            new BenchmarkSwitcher(new [] { typeof(DeserializeBenchmarks) }).Run(new[] { "*" });
+            new BenchmarkSwitcher(new [] { typeof(JsonTextReaderBenchmarks) }).Run(new[] { "*" });
 
             //OldTimeyBenchmark();
         }

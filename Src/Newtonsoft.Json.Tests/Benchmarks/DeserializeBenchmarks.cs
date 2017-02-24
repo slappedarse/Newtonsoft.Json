@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
 using Newtonsoft.Json.Linq;
+using Newtonsoft.Json;
 
 namespace Newtonsoft.Json.Tests.Benchmarks
 {

@@ -12,11 +12,21 @@ namespace Newtonsoft.Json.Tests.Benchmarks
 {
     public class LowLevelBenchmarks
     {
+        private const string FloatText = "123.123";
+        private static readonly char[] FloatChars = FloatText.ToCharArray();
+
         [Benchmark]
-        public void DecimalTryParse()
+        public void DecimalTryParseString()
         {
             decimal value;
-            decimal.TryParse("100.1", NumberStyles.Number | NumberStyles.AllowExponent, CultureInfo.InvariantCulture, out value);
+            decimal.TryParse(FloatText, NumberStyles.Number | NumberStyles.AllowExponent, CultureInfo.InvariantCulture, out value);
+        }
+
+        [Benchmark]
+        public void DecimalTryParseChars()
+        {
+            decimal value;
+            ConvertUtils.DecimalTryParse(FloatChars, 0, FloatChars.Length, out value);
         }
 
         [Benchmark]
