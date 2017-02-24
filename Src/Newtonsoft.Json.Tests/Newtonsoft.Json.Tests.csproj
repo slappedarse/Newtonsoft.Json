@@ -49,6 +49,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Benchmarks\XmlNodeConverterBenchmarks.cs" />
+    <Compile Include="Benchmarks\JsonTextWriterBenchmarks.cs" />
+    <Compile Include="Benchmarks\JsonTextReaderBenchmarks.cs" />
+    <Compile Include="Benchmarks\SerializeComparisonBenchmarks.cs" />
+    <Compile Include="Benchmarks\DeserializeComparisonBenchmarks.cs" />
     <Compile Include="Benchmarks\DeserializeBenchmarks.cs" />
     <Compile Include="Benchmarks\JValueConvertBenchmarks.cs" />
     <Compile Include="Benchmarks\LargeJArrayBenchmarks.cs" />

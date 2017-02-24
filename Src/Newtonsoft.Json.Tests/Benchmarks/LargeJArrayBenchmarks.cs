@@ -13,6 +13,15 @@ namespace Newtonsoft.Json.Tests.Benchmarks
     {
         private JArray _largeJArraySample;
 
+        //static LargeJArrayBenchmarks()
+        //{
+        //    _largeJArraySample = new JArray();
+        //    for (int i = 0; i < 100000; i++)
+        //    {
+        //        _largeJArraySample.Add(i);
+        //    }
+        //}
+
         [Setup]
         public void SetupData()
         {
@@ -42,10 +51,7 @@ namespace Newtonsoft.Json.Tests.Benchmarks
         [Benchmark]
         public void AddPerformance()
         {
-            for (int i = 0; i < 1000; i++)
-            {
-                _largeJArraySample.Add(i);
-            }
+            _largeJArraySample.Add(1);
         }
     }
 }

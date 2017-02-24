@@ -44,6 +44,11 @@ namespace Newtonsoft.Json.TestConsole
     {
         public static void Main(string[] args)
         {
+            //new BenchmarkSwitcher(typeof(Runner).GetTypeInfo().Assembly).Run(new[] { "*" });
+            new BenchmarkSwitcher(new [] { typeof(LargeJArrayBenchmarks) }).Run(new[] { "*" });
+            
+            return;
+
             Console.WriteLine("Json.NET Test Console");
 
             string version = FileVersionInfo.GetVersionInfo(typeof(JsonConvert).Assembly.Location).FileVersion;
@@ -78,49 +83,6 @@ namespace Newtonsoft.Json.TestConsole
             Console.WriteLine("Finished");
             Console.WriteLine("Press any key to exit");
             Console.ReadKey();
-        }
-
-        public static void LargeArrayJTokenPathPerformance()
-        {
-            JArray a = new JArray();
-            for (int i = 0; i < 100000; i++)
-            {
-                a.Add(i);
-            }
-
-            JToken last = a.Last;
-
-            int interations = 1000;
-
-            Console.WriteLine("Ready!!!");
-            Console.ReadKey();
-
-            string p = null;
-            for (int i = 0; i < interations; i++)
-            {
-                p = last.Path;
-            }
-        }
-
-        public static void SerializeJsonAsync()
-        {
-            PerformanceTests t = new PerformanceTests();
-            t.Iterations = 50000;
-            t.SerializeAsync().Wait();
-        }
-
-        public static void DeserializeJsonAsync()
-        {
-            PerformanceTests t = new PerformanceTests();
-            t.Iterations = 50000;
-            t.DeserializeAsync().Wait();
-        }
-
-        public static void DeserializeJson()
-        {
-            PerformanceTests t = new PerformanceTests();
-            t.Iterations = 50000;
-            t.Deserialize();
         }
 
         public static void WriteLargeJson()
