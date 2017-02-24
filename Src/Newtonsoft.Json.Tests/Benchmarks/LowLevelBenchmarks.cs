@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -11,6 +12,13 @@ namespace Newtonsoft.Json.Tests.Benchmarks
 {
     public class LowLevelBenchmarks
     {
+        [Benchmark]
+        public void DecimalTryParse()
+        {
+            decimal value;
+            decimal.TryParse("100.1", NumberStyles.Number | NumberStyles.AllowExponent, CultureInfo.InvariantCulture, out value);
+        }
+
         [Benchmark]
         public void WriteEscapedJavaScriptString()
         {

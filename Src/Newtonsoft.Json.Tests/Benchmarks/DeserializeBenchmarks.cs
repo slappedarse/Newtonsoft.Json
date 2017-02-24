@@ -11,13 +11,13 @@ namespace Newtonsoft.Json.Tests.Benchmarks
     public class DeserializeBenchmarks
     {
         private static readonly string LargeJson;
-        private static readonly string DoubleArrayJson;
+        private static readonly string FloatArrayJson;
 
         static DeserializeBenchmarks()
         {
             LargeJson = System.IO.File.ReadAllText("large.json");
 
-            DoubleArrayJson = new JArray(Enumerable.Range(0, 5000).Select(i => (double)i)).ToString(Formatting.None);
+            FloatArrayJson = new JArray(Enumerable.Range(0, 5000).Select(i => i * 1.1m)).ToString(Formatting.None);
         }
 
         [Benchmark]
@@ -29,7 +29,13 @@ namespace Newtonsoft.Json.Tests.Benchmarks
         [Benchmark]
         public IList<double> DeserializeDoubleList()
         {
-            return JsonConvert.DeserializeObject<IList<double>>(DoubleArrayJson);
+            return JsonConvert.DeserializeObject<IList<double>>(FloatArrayJson);
+        }
+
+        [Benchmark]
+        public IList<decimal> DeserializeDecimalList()
+        {
+            return JsonConvert.DeserializeObject<IList<decimal>>(FloatArrayJson);
         }
     }
 }
