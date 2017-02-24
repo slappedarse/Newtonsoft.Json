@@ -28,11 +28,14 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web.Script.Serialization;
+using BenchmarkDotNet.Running;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Tests;
+using Newtonsoft.Json.Tests.Benchmarks;
 using Newtonsoft.Json.Tests.Converters;
 
 namespace Newtonsoft.Json.TestConsole
@@ -52,8 +55,11 @@ namespace Newtonsoft.Json.TestConsole
             //PerformanceTests t = new PerformanceTests();
             //t.DeserializeLargeJson();
 
+            new BenchmarkSwitcher(typeof(Runner).GetTypeInfo().Assembly).Run(new[] { "*" });
+
+
             //PerformanceTests t = new PerformanceTests();
-            TokenWriteToAsync();
+            //TokenWriteToAsync();
             //t.Iterations = 50000;
             //t.BenchmarkDeserializeMethod<TestClass>(PerformanceTests.SerializeMethod.JsonNet, PerformanceTests.JsonText);
 
@@ -96,13 +102,6 @@ namespace Newtonsoft.Json.TestConsole
             }
         }
 
-        public static void TokenWriteToAsync()
-        {
-            PerformanceTests t = new PerformanceTests();
-            t.Iterations = 50000;
-            t.TokenWriteToAsync().Wait();
-        }
-
         public static void SerializeJsonAsync()
         {
             PerformanceTests t = new PerformanceTests();
@@ -122,12 +121,6 @@ namespace Newtonsoft.Json.TestConsole
             PerformanceTests t = new PerformanceTests();
             t.Iterations = 50000;
             t.Deserialize();
-        }
-
-        public static void DeserializeLargeJson()
-        {
-            PerformanceTests t = new PerformanceTests();
-            t.DeserializeLargeJson();
         }
 
         public static void WriteLargeJson()

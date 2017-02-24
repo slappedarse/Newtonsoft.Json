@@ -49,6 +49,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Benchmarks\DeserializeBenchmarks.cs" />
+    <Compile Include="Benchmarks\JValueConvertBenchmarks.cs" />
+    <Compile Include="Benchmarks\LargeJArrayBenchmarks.cs" />
+    <Compile Include="Benchmarks\JTokenBenchmarks.cs" />
+    <Compile Include="Benchmarks\LowLevelBenchmarks.cs" />
+    <Compile Include="Benchmarks\Runner.cs" />
     <Compile Include="Bson\BsonReaderAsyncTests.cs" />
     <Compile Include="Bson\BsonReaderTests.cs" />
     <Compile Include="Bson\BsonWriterAsyncTests.cs" />
