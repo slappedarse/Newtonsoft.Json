@@ -30,7 +30,7 @@ using System.Collections.ObjectModel;
 using System.Globalization;
 using System.IO;
 using Newtonsoft.Json.Schema;
-#if !(NET20 || NET35 || PORTABLE) || NETSTANDARD1_3
+#if !(NET20 || NET35 || PORTABLE40 || PORTABLE) || NETSTANDARD1_3
 using System.Numerics;
 #endif
 using System.Runtime.Serialization;
@@ -609,7 +609,7 @@ namespace Newtonsoft.Json.Tests
             value = null;
             Assert.AreEqual("null", JsonConvert.ToString(value));
 
-#if !(PORTABLE || DNXCORE50)
+#if !(PORTABLE || DNXCORE50 || PORTABLE40)
             value = DBNull.Value;
             Assert.AreEqual("null", JsonConvert.ToString(value));
 #endif
@@ -1111,7 +1111,7 @@ namespace Newtonsoft.Json.Tests
             writer.Flush();
         }
 
-#if !(NET20 || NET35 || PORTABLE) || NETSTANDARD1_3
+#if !(NET20 || NET35 || PORTABLE40 || PORTABLE) || NETSTANDARD1_3
         [Test]
         public void IntegerLengthOverflows()
         {
@@ -1661,7 +1661,7 @@ namespace Newtonsoft.Json.Tests
             Assert.IsNotNull(actual);
         }
 
-#if !(NET40 || NET35 || NET20)
+#if !(NET40 || NET35 || NET20 || PORTABLE40)
         [Test]
         public void ShouldNotPopulateReadOnlyDictionaryObjectWithNonDefaultConstructor()
         {
@@ -1760,6 +1760,43 @@ namespace Newtonsoft.Json.Tests
             }
 
             IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+        }
+
+        [Test]
+        public void ShouldNotRequireIgnoredPropertiesWithItemsRequired()
+        {
+            string json = @"{
+  ""exp"": 1483228800,
+  ""active"": true
+}";
+            ItemsRequiredObjectWithIgnoredProperty value = JsonConvert.DeserializeObject<ItemsRequiredObjectWithIgnoredProperty>(json);
+            Assert.IsNotNull(value);
+            Assert.AreEqual(value.Expiration, new DateTime(2017, 1, 1, 0, 0, 0, DateTimeKind.Utc));
+            Assert.AreEqual(value.Active, true);
+        }
+
+        [JsonObject(ItemRequired = Required.Always)]
+        public sealed class ItemsRequiredObjectWithIgnoredProperty
+        {
+            private static readonly DateTime s_unixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+
+            [JsonProperty("exp")]
+            private int _expiration
+            {
+                get
+                {
+                    return (int)((Expiration - s_unixEpoch).TotalSeconds);
+                }
+                set
+                {
+                    Expiration = s_unixEpoch.AddSeconds(value);
+                }
+            }
+
+            public bool Active { get; set; }
+
+            [JsonIgnore]
+            public DateTime Expiration { get; set; }
         }
     }
 }

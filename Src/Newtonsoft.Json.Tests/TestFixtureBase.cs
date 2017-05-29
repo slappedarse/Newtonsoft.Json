@@ -45,7 +45,7 @@ using NUnit.Framework;
 #endif
 using Newtonsoft.Json.Utilities;
 using System.Collections;
-#if !(NET20 || NET35 || NET40)
+#if !(NET20 || NET35 || NET40 || PORTABLE40)
 using System.Threading.Tasks;
 #endif
 #if NET20
@@ -209,6 +209,15 @@ namespace Newtonsoft.Json.Tests
             return Encoding.UTF8.GetString(data, 0, data.Length);
         }
 #endif
+
+        public static string ResolvePath(string path)
+        {
+#if !DNXCORE50
+            return Path.Combine(TestContext.CurrentContext.TestDirectory, path);
+#else
+            return path;
+#endif
+        }
 
         protected string GetOffset(DateTime d, DateFormatHandling dateFormatHandling)
         {
@@ -388,7 +397,7 @@ namespace Newtonsoft.Json.Tests
             }
         }
 
-#if !(NET20 || NET35 || NET40)
+#if !(NET20 || NET35 || NET40 || PORTABLE40)
         public static async Task<TException> ThrowsAsync<TException>(Func<Task> action, params string[] possibleMessages)
             where TException : Exception
         {

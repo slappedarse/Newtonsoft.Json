@@ -24,7 +24,7 @@
 #endregion
 
 using System.Diagnostics;
-#if !(NET35 || NET20)
+#if !(NET35 || NET20 || PORTABLE40)
 using System;
 using System.Collections.Generic;
 using System.Dynamic;
@@ -97,7 +97,7 @@ namespace Newtonsoft.Json.Tests.Linq
         {
             dynamic d;
 
-            using (var jsonFile = System.IO.File.OpenText("large.json"))
+            using (var jsonFile = System.IO.File.OpenText(ResolvePath("large.json")))
             using (JsonTextReader jsonTextReader = new JsonTextReader(jsonFile))
             {
                 JsonSerializer serializer = new JsonSerializer();

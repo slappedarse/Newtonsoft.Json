@@ -23,6 +23,8 @@
 // OTHER DEALINGS IN THE SOFTWARE.
 #endregion
 
+#if HAVE_BENCHMARKS
+
 using System.IO;
 using System.Linq;
 using System.Xml;
@@ -43,7 +45,7 @@ namespace Newtonsoft.Json.Tests.Benchmarks
         [Benchmark]
         public void ReadLargeJson()
         {
-            using (StreamReader fs = System.IO.File.OpenText("large.json"))
+            using (StreamReader fs = System.IO.File.OpenText(TestFixtureBase.ResolvePath("large.json")))
             using (JsonTextReader jsonTextReader = new JsonTextReader(fs))
             {
                 while (jsonTextReader.Read())
@@ -66,3 +68,5 @@ namespace Newtonsoft.Json.Tests.Benchmarks
         }
     }
 }
+
+#endif

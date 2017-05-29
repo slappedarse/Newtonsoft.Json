@@ -59,7 +59,7 @@ namespace Newtonsoft.Json.Tests.Bson
         [Test]
         public void DeserializeLargeBsonObject()
         {
-            byte[] data = System.IO.File.ReadAllBytes(@"SpaceShipV2.bson");
+            byte[] data = System.IO.File.ReadAllBytes(ResolvePath(@"SpaceShipV2.bson"));
 
             MemoryStream ms = new MemoryStream(data);
             BsonReader reader = new BsonReader(ms);
@@ -1491,7 +1491,7 @@ namespace Newtonsoft.Json.Tests.Bson
             Assert.AreEqual(badText, (string)o["test"]);
         }
 
-#if !(NET20 || NET35 || PORTABLE) || NETSTANDARD1_3
+#if !(NET20 || NET35 || PORTABLE || PORTABLE40) || NETSTANDARD1_3
         public class BigIntegerTestClass
         {
             public BigInteger Blah { get; set; }

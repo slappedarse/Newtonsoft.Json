@@ -39,6 +39,7 @@ namespace Newtonsoft.Json.Tests.Utilities
     [TestFixture]
     public class ConvertUtilsTests : TestFixtureBase
     {
+#if HAS_CUSTOM_DOUBLE_PARSE
         private void AssertDoubleTryParse(string s, ParseResult expectedResult, double? expectedValue)
         {
             double d;
@@ -157,6 +158,7 @@ namespace Newtonsoft.Json.Tests.Utilities
 
             AssertDoubleTryParse("4.94065645841247E+555", ParseResult.Overflow, null);
         }
+#endif
 
         private void AssertDecimalTryParse(string s, ParseResult expectedResult, decimal? expectedValue)
         {
@@ -213,7 +215,10 @@ namespace Newtonsoft.Json.Tests.Utilities
             AssertDecimalTryParse("1.2345678901234567890123456789e-26", ParseResult.Success, 0.0000000000000000000000000123M);
             AssertDecimalTryParse("1.2345678901234567890123456789e-28", ParseResult.Success, 0.0000000000000000000000000001M);
             AssertDecimalTryParse("1.2345678901234567890123456789e-29", ParseResult.Success, 0M);
+
+#if !(NET20 || NET35)
             AssertDecimalTryParse("1E-999", ParseResult.Success, 0M);
+#endif
 
             for (decimal i = -100; i < 100; i += 0.1m)
             {

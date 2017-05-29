@@ -23,6 +23,8 @@
 // OTHER DEALINGS IN THE SOFTWARE.
 #endregion
 
+#if HAVE_BENCHMARKS
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -44,11 +46,17 @@ namespace Newtonsoft.Json.Tests.Benchmarks
     [TestFixture]
     public class Runner : TestFixtureBase
     {
-        [Test]
+#if DNXCORE50
+        [Test(Skip = "Don't run with other unit tests")]
+#else
         [Ignore("Don't run with other unit tests")]
+        [Test]
+#endif
         public void RunBenchmarks()
         {
             new BenchmarkSwitcher(typeof(Runner).GetTypeInfo().Assembly).Run(new []{ "*" });
         }
     }
 }
+
+#endif

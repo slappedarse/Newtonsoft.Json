@@ -25,11 +25,9 @@
 
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Specialized;
 using System.Runtime.Serialization;
-#if !(NET35 || NET20 || PORTABLE)
-using System.Collections.Concurrent;
-#endif
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Globalization;
@@ -54,7 +52,7 @@ using Assert = Newtonsoft.Json.Tests.XUnitAssert;
 #else
 using NUnit.Framework;
 #endif
-#if !NET20
+#if !NET20 && !PORTABLE40
 using System.Xml.Linq;
 #endif
 
@@ -63,6 +61,53 @@ namespace Newtonsoft.Json.Tests.Serialization
     [TestFixture]
     public class JsonSerializerCollectionsTests : TestFixtureBase
     {
+#if !(NET20 || NET35)
+        [Test]
+        public void SerializeConcurrentQueue()
+        {
+            ConcurrentQueue<int> queue1 = new ConcurrentQueue<int>();
+            queue1.Enqueue(1);
+
+            string output = JsonConvert.SerializeObject(queue1);
+            Assert.AreEqual(@"[1]", output);
+
+            ConcurrentQueue<int> queue2 = JsonConvert.DeserializeObject<ConcurrentQueue<int>>(output);
+            int i;
+            Assert.IsTrue(queue2.TryDequeue(out i));
+            Assert.AreEqual(1, i);
+        }
+
+        [Test]
+        public void SerializeConcurrentBag()
+        {
+            ConcurrentBag<int> bag1 = new ConcurrentBag<int>();
+            bag1.Add(1);
+
+            string output = JsonConvert.SerializeObject(bag1);
+            Assert.AreEqual(@"[1]", output);
+
+            ConcurrentBag<int> bag2 = JsonConvert.DeserializeObject<ConcurrentBag<int>>(output);
+            int i;
+            Assert.IsTrue(bag2.TryTake(out i));
+            Assert.AreEqual(1, i);
+        }
+
+        [Test]
+        public void SerializeConcurrentStack()
+        {
+            ConcurrentStack<int> stack1 = new ConcurrentStack<int>();
+            stack1.Push(1);
+
+            string output = JsonConvert.SerializeObject(stack1);
+            Assert.AreEqual(@"[1]", output);
+
+            ConcurrentStack<int> stack2 = JsonConvert.DeserializeObject<ConcurrentStack<int>>(output);
+            int i;
+            Assert.IsTrue(stack2.TryPop(out i));
+            Assert.AreEqual(1, i);
+        }
+#endif
+
         [Test]
         public void DoubleKey_WholeValue()
         {
@@ -353,7 +398,7 @@ namespace Newtonsoft.Json.Tests.Serialization
         }
 #endif
 
-#if !(NET35 || NET20 || PORTABLE)
+#if !(NET35 || NET20 || PORTABLE || PORTABLE40)
         public class SomeObject
         {
             public string Text1 { get; set; }
@@ -640,7 +685,7 @@ namespace Newtonsoft.Json.Tests.Serialization
             Assert.AreEqual("string!", l[0]);
         }
 
-#if !(NET40 || NET35 || NET20)
+#if !(NET40 || NET35 || NET20 || PORTABLE40)
         [Test]
         public void DeserializeReadOnlyListInterface()
         {
@@ -995,7 +1040,7 @@ namespace Newtonsoft.Json.Tests.Serialization
             Assert.AreEqual(3, v2["Third"]);
         }
 
-#if !(NET35 || NET20 || PORTABLE)
+#if !(NET35 || NET20 || PORTABLE || PORTABLE40)
         [Test]
         public void DeserializeConcurrentDictionary()
         {
@@ -1073,7 +1118,7 @@ namespace Newtonsoft.Json.Tests.Serialization
             ExceptionAssert.Throws<JsonSerializationException>(() => { JsonConvert.DeserializeObject<IList<KeyValuePair<string, IList<string>>>>(json); }, "Cannot convert null value to KeyValuePair. Path '[0]', line 1, position 6.");
         }
 
-#if !(NET40 || NET35 || NET20)
+#if !(NET40 || NET35 || NET20 || PORTABLE40)
         public class PopulateReadOnlyTestClass
         {
             public IList<int> NonReadOnlyList { get; set; }
@@ -1916,7 +1961,7 @@ namespace Newtonsoft.Json.Tests.Serialization
             Assert.AreEqual("Product 1", p1.Name);
         }
 
-#if !(NET40 || NET35 || NET20)
+#if !(NET40 || NET35 || NET20 || PORTABLE40)
         [Test]
         public void ReadOnlyIntegerList()
         {
@@ -1966,7 +2011,7 @@ namespace Newtonsoft.Json.Tests.Serialization
             }, "Unable to find a constructor to use for type Newtonsoft.Json.Tests.Serialization.ReadOnlyCollectionWithArrayArgument`1[System.Double]. Path '', line 1, position 1.");
         }
 
-#if !NET20
+#if !NET20 && !PORTABLE40
         [Test]
         public void NonDefaultConstructor_DuplicateKeyInDictionary_Replace()
         {
@@ -2085,7 +2130,7 @@ namespace Newtonsoft.Json.Tests.Serialization
         }
     }
 
-#if !NET20
+#if !NET20 && !PORTABLE40
     public class CASResponce
     {
         //<?xml version='1.0' encoding='iso-8859-1' ?>
@@ -2389,7 +2434,7 @@ namespace Newtonsoft.Json.Tests.Serialization
         }
     }
 
-#if !(NET40 || NET35 || NET20)
+#if !(NET40 || NET35 || NET20 || PORTABLE40)
     public class ReadOnlyIntegerList : IReadOnlyCollection<int>
     {
         private readonly List<int> _list;
