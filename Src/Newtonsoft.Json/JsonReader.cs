@@ -751,7 +751,19 @@ namespace Newtonsoft.Json
                 case JsonToken.Float:
                     if (!(Value is decimal))
                     {
-                        SetToken(JsonToken.Float, Convert.ToDecimal(Value, CultureInfo.InvariantCulture), false);
+                        decimal d;
+#if HAVE_BIG_INTEGER
+                        if (Value is BigInteger)
+                        {
+                            d = (decimal)(BigInteger)Value;
+                        }
+                        else
+#endif
+                        {
+                            d = Convert.ToDecimal(Value, CultureInfo.InvariantCulture);
+                        }
+
+                        SetToken(JsonToken.Float, d, false);
                     }
 
                     return (decimal)Value;
@@ -965,7 +977,13 @@ namespace Newtonsoft.Json
             SetToken(newToken, value, true);
         }
 
-        internal void SetToken(JsonToken newToken, object value, bool updateIndex)
+        /// <summary>
+        /// Sets the current token and value.
+        /// </summary>
+        /// <param name="newToken">The new token.</param>
+        /// <param name="value">The value.</param>
+        /// <param name="updateIndex">A flag indicating whether the position index inside an array should be updated.</param>
+        protected void SetToken(JsonToken newToken, object value, bool updateIndex)
         {
             _tokenType = newToken;
             _value = value;
@@ -1144,6 +1162,62 @@ namespace Newtonsoft.Json
             {
                 throw JsonSerializationException.Create(this, "Unexpected end when reading JSON.");
             }
+        }
+
+        internal void ReadForTypeAndAssert(JsonContract contract, bool hasConverter)
+        {
+            if (!ReadForType(contract, hasConverter))
+            {
+                throw JsonSerializationException.Create(this, "Unexpected end when reading JSON.");
+            }
+        }
+
+        internal bool ReadForType(JsonContract contract, bool hasConverter)
+        {
+            // don't read properties with converters as a specific value
+            // the value might be a string which will then get converted which will error if read as date for example
+            if (hasConverter)
+            {
+                return Read();
+            }
+
+            ReadType t = (contract != null) ? contract.InternalReadType : ReadType.Read;
+
+            switch (t)
+            {
+                case ReadType.Read:
+                    return ReadAndMoveToContent();
+                case ReadType.ReadAsInt32:
+                    ReadAsInt32();
+                    break;
+                case ReadType.ReadAsDecimal:
+                    ReadAsDecimal();
+                    break;
+                case ReadType.ReadAsDouble:
+                    ReadAsDouble();
+                    break;
+                case ReadType.ReadAsBytes:
+                    ReadAsBytes();
+                    break;
+                case ReadType.ReadAsBoolean:
+                    ReadAsBoolean();
+                    break;
+                case ReadType.ReadAsString:
+                    ReadAsString();
+                    break;
+                case ReadType.ReadAsDateTime:
+                    ReadAsDateTime();
+                    break;
+#if HAVE_DATE_TIME_OFFSET
+                case ReadType.ReadAsDateTimeOffset:
+                    ReadAsDateTimeOffset();
+                    break;
+#endif
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+
+            return (TokenType != JsonToken.None);
         }
 
         internal bool ReadAndMoveToContent()

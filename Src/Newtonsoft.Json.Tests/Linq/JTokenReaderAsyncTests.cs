@@ -36,7 +36,7 @@ using Assert = Newtonsoft.Json.Tests.XUnitAssert;
 using NUnit.Framework;
 #endif
 using System.IO;
-#if !PORTABLE || NETSTANDARD1_1
+#if !PORTABLE || NETSTANDARD1_3
 using System.Numerics;
 #endif
 using Newtonsoft.Json.Linq;
@@ -48,7 +48,7 @@ namespace Newtonsoft.Json.Tests.Linq
     [TestFixture]
     public class JTokenReaderAsyncTests : TestFixtureBase
     {
-#if !PORTABLE || NETSTANDARD1_1
+#if !PORTABLE || NETSTANDARD1_3
         [Test]
         public async Task ConvertBigIntegerToDoubleAsync()
         {
@@ -757,7 +757,7 @@ namespace Newtonsoft.Json.Tests.Linq
             Assert.AreEqual(1d, await reader.ReadAsDoubleAsync());
         }
 
-#if !PORTABLE || NETSTANDARD1_1
+#if !PORTABLE || NETSTANDARD1_3
         [Test]
         public async Task ReadAsBoolean_BigInteger_SuccessAsync()
         {

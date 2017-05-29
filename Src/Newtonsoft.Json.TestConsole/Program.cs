@@ -24,8 +24,8 @@
 #endregion
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
+<<<<<<< HEAD
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -37,6 +37,10 @@ using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Tests;
 using Newtonsoft.Json.Tests.Benchmarks;
 using Newtonsoft.Json.Tests.Converters;
+=======
+using BenchmarkDotNet.Running;
+using Newtonsoft.Json.Tests.Benchmarks;
+>>>>>>> JamesNK/master
 
 namespace Newtonsoft.Json.TestConsole
 {
@@ -44,6 +48,7 @@ namespace Newtonsoft.Json.TestConsole
     {
         public static void Main(string[] args)
         {
+<<<<<<< HEAD
             //new BenchmarkSwitcher(typeof(Runner).GetTypeInfo().Assembly).Run(new[] { "*" });
             new BenchmarkSwitcher(new [] { typeof(JsonTextReaderBenchmarks) }).Run(new[] { "*" });
 
@@ -172,8 +177,12 @@ namespace Newtonsoft.Json.TestConsole
             }
 
             sw.Stop();
+=======
+            string version = FileVersionInfo.GetVersionInfo(typeof(JsonConvert).Assembly.Location).FileVersion;
+            Console.WriteLine("Json.NET Version: " + version);
+>>>>>>> JamesNK/master
 
-            Console.WriteLine("Finished. Total seconds: " + sw.Elapsed.TotalSeconds);
+            new BenchmarkSwitcher(new [] { typeof(SerializeBenchmarks), typeof(DeserializeBenchmarks) }).Run(new[] { "*" });
         }
     }
 }

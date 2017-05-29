@@ -24,11 +24,13 @@
 #endregion
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Globalization;
 using System.IO;
 using Newtonsoft.Json.Schema;
-#if !(NET20 || NET35 || PORTABLE40 || PORTABLE) || NETSTANDARD1_1
+#if !(NET20 || NET35 || PORTABLE40 || PORTABLE) || NETSTANDARD1_3
 using System.Numerics;
 #endif
 using System.Runtime.Serialization;
@@ -1109,7 +1111,7 @@ namespace Newtonsoft.Json.Tests
             writer.Flush();
         }
 
-#if !(NET20 || NET35 || PORTABLE40 || PORTABLE) || NETSTANDARD1_1
+#if !(NET20 || NET35 || PORTABLE40 || PORTABLE) || NETSTANDARD1_3
         [Test]
         public void IntegerLengthOverflows()
         {
@@ -1629,6 +1631,172 @@ namespace Newtonsoft.Json.Tests
 
         public class NonGenericChildClass : GenericIntermediateClass<int>
         {
+        }
+
+        [Test]
+        public void ShouldNotPopulateReadOnlyEnumerableObjectWithNonDefaultConstructor()
+        {
+            object actual = JsonConvert.DeserializeObject<HasReadOnlyEnumerableObject>("{\"foo\":{}}");
+            Assert.IsNotNull(actual);
+        }
+
+        [Test]
+        public void ShouldNotPopulateReadOnlyEnumerableObjectWithDefaultConstructor()
+        {
+            object actual = JsonConvert.DeserializeObject<HasReadOnlyEnumerableObjectAndDefaultConstructor>("{\"foo\":{}}");
+            Assert.IsNotNull(actual);
+        }
+
+        [Test]
+        public void ShouldNotPopulateContructorArgumentEnumerableObject()
+        {
+            object actual = JsonConvert.DeserializeObject<AcceptsEnumerableObjectToConstructor>("{\"foo\":{}}");
+            Assert.IsNotNull(actual);
+        }
+
+        [Test]
+        public void ShouldNotPopulateEnumerableObjectProperty()
+        {
+            object actual = JsonConvert.DeserializeObject<HasEnumerableObject>("{\"foo\":{}}");
+            Assert.IsNotNull(actual);
+        }
+
+#if !(NET40 || NET35 || NET20 || PORTABLE40)
+        [Test]
+        public void ShouldNotPopulateReadOnlyDictionaryObjectWithNonDefaultConstructor()
+        {
+            object actual = JsonConvert.DeserializeObject<HasReadOnlyDictionary>("{\"foo\":{'key':'value'}}");
+            Assert.IsNotNull(actual);
+        }
+
+        public sealed class HasReadOnlyDictionary
+        {
+            [JsonProperty("foo")]
+            public IReadOnlyDictionary<string, string> Foo { get; } = new ReadOnlyDictionary<string, string>(new Dictionary<string, string>());
+
+            [JsonConstructor]
+            public HasReadOnlyDictionary([JsonProperty("bar")] int bar)
+            {
+
+            }
+        }
+#endif
+
+        public sealed class HasReadOnlyEnumerableObject
+        {
+            [JsonProperty("foo")]
+            public EnumerableWithConverter Foo { get; } = new EnumerableWithConverter();
+
+            [JsonConstructor]
+            public HasReadOnlyEnumerableObject([JsonProperty("bar")] int bar)
+            {
+
+            }
+        }
+
+        public sealed class HasReadOnlyEnumerableObjectAndDefaultConstructor
+        {
+            [JsonProperty("foo")]
+            public EnumerableWithConverter Foo { get; } = new EnumerableWithConverter();
+
+            [JsonConstructor]
+            public HasReadOnlyEnumerableObjectAndDefaultConstructor()
+            {
+
+            }
+        }
+
+        public sealed class AcceptsEnumerableObjectToConstructor
+        {
+            [JsonConstructor]
+            public AcceptsEnumerableObjectToConstructor
+            (
+                [JsonProperty("foo")] EnumerableWithConverter foo,
+                [JsonProperty("bar")] int bar
+            )
+            {
+
+            }
+        }
+
+        public sealed class HasEnumerableObject
+        {
+            [JsonProperty("foo")]
+            public EnumerableWithConverter Foo { get; set; } = new EnumerableWithConverter();
+
+            [JsonConstructor]
+            public HasEnumerableObject([JsonProperty("bar")] int bar)
+            {
+
+            }
+        }
+
+        [JsonConverter(typeof(Converter))]
+        public sealed class EnumerableWithConverter : IEnumerable<int>
+        {
+            public sealed class Converter : JsonConverter
+            {
+                public override bool CanConvert(Type objectType)
+                    => objectType == typeof(Foo);
+
+                public override object ReadJson
+                    (JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+                {
+                    reader.Skip();
+                    return new EnumerableWithConverter();
+                }
+
+                public override void WriteJson
+                    (JsonWriter writer, object value, JsonSerializer serializer)
+                {
+                    writer.WriteStartObject();
+                    writer.WriteEndObject();
+                }
+            }
+
+            public IEnumerator<int> GetEnumerator()
+            {
+                yield break;
+            }
+
+            IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+        }
+
+        [Test]
+        public void ShouldNotRequireIgnoredPropertiesWithItemsRequired()
+        {
+            string json = @"{
+  ""exp"": 1483228800,
+  ""active"": true
+}";
+            ItemsRequiredObjectWithIgnoredProperty value = JsonConvert.DeserializeObject<ItemsRequiredObjectWithIgnoredProperty>(json);
+            Assert.IsNotNull(value);
+            Assert.AreEqual(value.Expiration, new DateTime(2017, 1, 1, 0, 0, 0, DateTimeKind.Utc));
+            Assert.AreEqual(value.Active, true);
+        }
+
+        [JsonObject(ItemRequired = Required.Always)]
+        public sealed class ItemsRequiredObjectWithIgnoredProperty
+        {
+            private static readonly DateTime s_unixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+
+            [JsonProperty("exp")]
+            private int _expiration
+            {
+                get
+                {
+                    return (int)((Expiration - s_unixEpoch).TotalSeconds);
+                }
+                set
+                {
+                    Expiration = s_unixEpoch.AddSeconds(value);
+                }
+            }
+
+            public bool Active { get; set; }
+
+            [JsonIgnore]
+            public DateTime Expiration { get; set; }
         }
     }
 }

@@ -27,7 +27,7 @@
 
 using System;
 using System.Globalization;
-#if !PORTABLE || NETSTANDARD1_1
+#if !PORTABLE || NETSTANDARD1_3
 using System.Numerics;
 #endif
 using System.Text;
@@ -593,7 +593,7 @@ namespace Newtonsoft.Json.Tests.JsonTextReaderTests
             }
         }
 
-#if !PORTABLE || NETSTANDARD1_1
+#if !PORTABLE || NETSTANDARD1_3
         [Test]
         public async Task ReadInt64OverflowAsync()
         {

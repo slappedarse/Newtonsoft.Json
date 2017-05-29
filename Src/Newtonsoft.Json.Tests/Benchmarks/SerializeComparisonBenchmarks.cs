@@ -1,8 +1,40 @@
+<<<<<<< HEAD
 ﻿using System;
+=======
+﻿#region License
+// Copyright (c) 2007 James Newton-King
+//
+// Permission is hereby granted, free of charge, to any person
+// obtaining a copy of this software and associated documentation
+// files (the "Software"), to deal in the Software without
+// restriction, including without limitation the rights to use,
+// copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the
+// Software is furnished to do so, subject to the following
+// conditions:
+//
+// The above copyright notice and this permission notice shall be
+// included in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+// OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+// HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+// WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+// OTHER DEALINGS IN THE SOFTWARE.
+#endregion
+
+#if HAVE_BENCHMARKS
+
+using System;
+>>>>>>> JamesNK/master
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.Serialization;
+<<<<<<< HEAD
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Runtime.Serialization.Json;
 using System.Text;
@@ -11,6 +43,19 @@ using System.Web.Script.Serialization;
 using BenchmarkDotNet.Attributes;
 using Newtonsoft.Json.Bson;
 using Newtonsoft.Json.Linq;
+=======
+#if (!DNXCORE50)
+using System.Runtime.Serialization.Formatters.Binary;
+using System.Web.Script.Serialization;
+#endif
+using System.Runtime.Serialization.Json;
+using System.Text;
+using System.Threading.Tasks;
+using BenchmarkDotNet.Attributes;
+using Newtonsoft.Json.Bson;
+using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Tests.TestObjects;
+>>>>>>> JamesNK/master
 
 namespace Newtonsoft.Json.Tests.Benchmarks
 {
@@ -65,6 +110,10 @@ namespace Newtonsoft.Json.Tests.Benchmarks
             }
         }
 
+<<<<<<< HEAD
+=======
+#if (!DNXCORE50)
+>>>>>>> JamesNK/master
         [Benchmark]
         public byte[] BinaryFormatter()
         {
@@ -92,6 +141,10 @@ namespace Newtonsoft.Json.Tests.Benchmarks
 
             return ser.Serialize(value);
         }
+<<<<<<< HEAD
+=======
+#endif
+>>>>>>> JamesNK/master
 
         [Benchmark]
         public string DataContractJsonSerializer()
@@ -126,7 +179,11 @@ namespace Newtonsoft.Json.Tests.Benchmarks
             return SerializeJsonNetLinq(TestClass);
         }
 
+<<<<<<< HEAD
         #region SerializeJsonNetManual
+=======
+#region SerializeJsonNetManual
+>>>>>>> JamesNK/master
         private string SerializeJsonNetLinq(TestClass c)
         {
             JObject o = new JObject(
@@ -148,7 +205,11 @@ namespace Newtonsoft.Json.Tests.Benchmarks
 
             return o.ToString(Formatting.None);
         }
+<<<<<<< HEAD
         #endregion
+=======
+#endregion
+>>>>>>> JamesNK/master
 
         [Benchmark]
         public string JsonNetManual()
@@ -156,7 +217,11 @@ namespace Newtonsoft.Json.Tests.Benchmarks
             return SerializeJsonNetManual(TestClass);
         }
 
+<<<<<<< HEAD
         #region SerializeJsonNetManual
+=======
+#region SerializeJsonNetManual
+>>>>>>> JamesNK/master
         private string SerializeJsonNetManual(TestClass c)
         {
             StringWriter sw = new StringWriter();
@@ -211,7 +276,11 @@ namespace Newtonsoft.Json.Tests.Benchmarks
             writer.Flush();
             return sw.ToString();
         }
+<<<<<<< HEAD
         #endregion
+=======
+#endregion
+>>>>>>> JamesNK/master
 
         [Benchmark]
         public Task<string> JsonNetManualAsync()
@@ -302,4 +371,10 @@ namespace Newtonsoft.Json.Tests.Benchmarks
         }
 #pragma warning restore 618
     }
+<<<<<<< HEAD
 }
+=======
+}
+
+#endif
+>>>>>>> JamesNK/master

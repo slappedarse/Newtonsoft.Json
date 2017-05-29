@@ -26,9 +26,6 @@
 using System;
 using System.Collections;
 using Newtonsoft.Json.Schema;
-#if HAVE_CONCURRENT_COLLECTIONS
-using System.Collections.Concurrent;
-#endif
 using System.Collections.Generic;
 using System.ComponentModel;
 #if HAVE_DYNAMIC
@@ -58,7 +55,13 @@ namespace Newtonsoft.Json.Serialization
     /// </summary>
     public class DefaultContractResolver : IContractResolver
     {
-        internal static readonly IContractResolver Instance = new DefaultContractResolver();
+        private static readonly IContractResolver _instance = new DefaultContractResolver();
+
+        // Json.NET Schema requires a property
+        internal static IContractResolver Instance
+        {
+            get { return _instance; }
+        }
 
         private static readonly JsonConverter[] BuiltInConverters =
         {
@@ -265,7 +268,7 @@ namespace Newtonsoft.Json.Serialization
 #if HAVE_DATA_CONTRACTS
                 Type match;
                 // don't include EntityKey on entities objects... this is a bit hacky
-                if (objectType.AssignableToTypeName("System.Data.Objects.DataClasses.EntityObject", out match))
+                if (objectType.AssignableToTypeName("System.Data.Objects.DataClasses.EntityObject", false, out match))
                 {
                     serializableMembers = serializableMembers.Where(ShouldSerializeEntityMember).ToList();
                 }
@@ -355,7 +358,7 @@ namespace Newtonsoft.Json.Serialization
                 }
                 else if (contract.MemberSerialization == MemberSerialization.Fields)
                 {
-#if HAVE_CAS
+#if HAVE_BINARY_FORMATTER
                     // mimic DataContractSerializer behaviour when populating fields by overriding default creator to create an uninitialized object
                     // note that this is only possible when the application is fully trusted so fall back to using the default constructor (if available) in partial trust
                     if (JsonTypeReflector.FullyTrusted)
@@ -370,6 +373,17 @@ namespace Newtonsoft.Json.Serialization
                     if (constructor != null)
                     {
                         contract.ParameterizedCreator = JsonTypeReflector.ReflectionDelegateFactory.CreateParameterizedConstructor(constructor);
+                        contract.CreatorParameters.AddRange(CreateConstructorParameters(constructor, contract.Properties));
+                    }
+                }
+                else if (contract.NonNullableUnderlyingType.IsValueType())
+                {
+                    // value types always have default constructor
+                    // check whether there is a constructor that matches with non-writable properties on value type
+                    ConstructorInfo constructor = GetImmutableConstructor(contract.NonNullableUnderlyingType, contract.Properties);
+                    if (constructor != null)
+                    {
+                        contract.OverrideCreator = JsonTypeReflector.ReflectionDelegateFactory.CreateParameterizedConstructor(constructor);
                         contract.CreatorParameters.AddRange(CreateConstructorParameters(constructor, contract.Properties));
                     }
                 }
@@ -566,6 +580,35 @@ namespace Newtonsoft.Json.Serialization
             return null;
         }
 
+        private ConstructorInfo GetImmutableConstructor(Type objectType, JsonPropertyCollection memberProperties)
+        {
+            IEnumerable<ConstructorInfo> constructors = objectType.GetConstructors();
+            IEnumerator<ConstructorInfo> en = constructors.GetEnumerator();
+            if (en.MoveNext())
+            {
+                ConstructorInfo constructor = en.Current;
+                if (!en.MoveNext())
+                {
+                    ParameterInfo[] parameters = constructor.GetParameters();
+                    if (parameters.Length > 0)
+                    {
+                        foreach (ParameterInfo parameterInfo in parameters)
+                        {
+                            var memberProperty = MatchProperty(memberProperties, parameterInfo.Name, parameterInfo.ParameterType);
+                            if (memberProperty == null || memberProperty.Writable)
+                            {
+                                return null;
+                            }
+                        }
+
+                        return constructor;
+                    }
+                }
+            }
+
+            return null;
+        }
+
         private ConstructorInfo GetParameterizedConstructor(Type objectType)
         {
 #if PORTABLE
@@ -603,15 +646,7 @@ namespace Newtonsoft.Json.Serialization
 
             foreach (ParameterInfo parameterInfo in constructorParameters)
             {
-                // it is possible to generate a ParameterInfo with a null name using Reflection.Emit
-                // protect against an ArgumentNullException from GetClosestMatchProperty by testing for null here
-                JsonProperty matchingMemberProperty = (parameterInfo.Name != null) ? memberProperties.GetClosestMatchProperty(parameterInfo.Name) : null;
-
-                // type must match as well as name
-                if (matchingMemberProperty != null && matchingMemberProperty.PropertyType != parameterInfo.ParameterType)
-                {
-                    matchingMemberProperty = null;
-                }
+                JsonProperty matchingMemberProperty = MatchProperty(memberProperties, parameterInfo.Name, parameterInfo.ParameterType);
 
                 // ensure that property will have a name from matching property or from parameterinfo
                 // parameterinfo could have no name if generated by a proxy (I'm looking at you Castle)
@@ -627,6 +662,25 @@ namespace Newtonsoft.Json.Serialization
             }
 
             return parameterCollection;
+        }
+
+        private JsonProperty MatchProperty(JsonPropertyCollection properties, string name, Type type)
+        {
+            // it is possible to generate a member with a null name using Reflection.Emit
+            // protect against an ArgumentNullException from GetClosestMatchProperty by testing for null here
+            if (name == null)
+            {
+                return null;
+            }
+
+            JsonProperty property = properties.GetClosestMatchProperty(name);
+            // must match type as well as name
+            if (property == null || property.PropertyType != type)
+            {
+                return null;
+            }
+
+            return property;
         }
 
         /// <summary>
@@ -827,15 +881,33 @@ namespace Newtonsoft.Json.Serialization
             }
         }
 
+        private static bool IsConcurrentCollection(Type t)
+        {
+            if (t.IsGenericType())
+            {
+                Type definition = t.GetGenericTypeDefinition();
+
+                switch (definition.FullName)
+                {
+                    case "System.Collections.Concurrent.ConcurrentQueue`1":
+                    case "System.Collections.Concurrent.ConcurrentStack`1":
+                    case "System.Collections.Concurrent.ConcurrentBag`1":
+                    case "System.Collections.Concurrent.ConcurrentDictionary`2":
+                        return true;
+                }
+            }
+
+            return false;
+        }
+
         private static bool ShouldSkipDeserialized(Type t)
         {
-#if HAVE_CONCURRENT_COLLECTIONS
             // ConcurrentDictionary throws an error in its OnDeserialized so ignore - http://json.codeplex.com/discussions/257093
-            if (t.IsGenericType() && t.GetGenericTypeDefinition() == typeof(ConcurrentDictionary<,>))
+            if (IsConcurrentCollection(t))
             {
                 return true;
             }
-#endif
+
 #if HAVE_FSHARP_TYPES
             if (t.Name == FSharpUtils.FSharpSetTypeName || t.Name == FSharpUtils.FSharpMapTypeName)
             {
@@ -848,14 +920,13 @@ namespace Newtonsoft.Json.Serialization
 
         private static bool ShouldSkipSerializing(Type t)
         {
-#if HAVE_FSHARP_TYPES
-            if (t.Name == FSharpUtils.FSharpSetTypeName || t.Name == FSharpUtils.FSharpMapTypeName)
+            if (IsConcurrentCollection(t))
             {
                 return true;
             }
-#endif
-#if DOTNET
-            if (t.IsGenericType() && t.GetGenericTypeDefinition() == typeof(ConcurrentDictionary<,>))
+
+#if HAVE_FSHARP_TYPES
+            if (t.Name == FSharpUtils.FSharpSetTypeName || t.Name == FSharpUtils.FSharpMapTypeName)
             {
                 return true;
             }
@@ -1454,7 +1525,7 @@ namespace Newtonsoft.Json.Serialization
                     // automatically ignore extension data dictionary property if it is public
                 || JsonTypeReflector.GetAttribute<JsonExtensionDataAttribute>(attributeProvider) != null
 #if HAVE_NON_SERIALIZED_ATTRIBUTE
-                || JsonTypeReflector.GetAttribute<NonSerializedAttribute>(attributeProvider) != null
+                || JsonTypeReflector.IsNonSerializable(attributeProvider)
 #endif
                 ;
 

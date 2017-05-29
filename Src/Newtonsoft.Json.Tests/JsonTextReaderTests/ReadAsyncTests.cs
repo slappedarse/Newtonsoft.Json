@@ -28,7 +28,7 @@
 using System;
 using System.Globalization;
 using Newtonsoft.Json.Linq;
-#if !PORTABLE || NETSTANDARD1_1
+#if !PORTABLE || NETSTANDARD1_3
 using System.Numerics;
 #endif
 using System.Text;
@@ -1173,7 +1173,7 @@ second line
 third line", jsonTextReader.Value);
         }
 
-#if !PORTABLE || NETSTANDARD1_1
+#if !PORTABLE || NETSTANDARD1_3
         [Test]
         public async Task ReadBigIntegerAsync()
         {

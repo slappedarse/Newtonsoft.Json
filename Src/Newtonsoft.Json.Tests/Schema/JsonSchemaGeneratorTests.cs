@@ -49,8 +49,8 @@ using Extensions = Newtonsoft.Json.Schema.Extensions;
 using Newtonsoft.Json.Utilities.LinqBridge;
 #else
 using System.Linq;
-
 #endif
+using Newtonsoft.Json.Tests.Serialization;
 
 namespace Newtonsoft.Json.Tests.Schema
 {
@@ -312,14 +312,14 @@ namespace Newtonsoft.Json.Tests.Schema
             Assert.IsTrue(v.IsValid(schema));
         }
 
-#if !(PORTABLE || DNXCORE50 || PORTABLE40)
+#if !(PORTABLE || DNXCORE50 || PORTABLE40) || NETSTANDARD1_3
         [Test]
         public void GenerateSchemaForISerializable()
         {
             JsonSchemaGenerator generator = new JsonSchemaGenerator();
             generator.UndefinedSchemaIdHandling = UndefinedSchemaIdHandling.UseTypeName;
 
-            JsonSchema schema = generator.Generate(typeof(Exception));
+            JsonSchema schema = generator.Generate(typeof(ISerializableTestObject));
 
             Assert.AreEqual(JsonSchemaType.Object, schema.Type);
             Assert.AreEqual(true, schema.AllowAdditionalProperties);
@@ -338,7 +338,9 @@ namespace Newtonsoft.Json.Tests.Schema
 
             Assert.AreEqual(JsonSchemaType.Null, schema.Type);
         }
+#endif
 
+#if !(PORTABLE || DNXCORE50 || PORTABLE40) || NETSTANDARD1_3
         public class CustomDirectoryInfoMapper : DefaultContractResolver
         {
             public CustomDirectoryInfoMapper()
@@ -365,109 +367,6 @@ namespace Newtonsoft.Json.Tests.Schema
                 return c;
             }
         }
-
-        [Test]
-        public void GenerateSchemaForDirectoryInfo()
-        {
-            JsonSchemaGenerator generator = new JsonSchemaGenerator();
-            generator.UndefinedSchemaIdHandling = UndefinedSchemaIdHandling.UseTypeName;
-            generator.ContractResolver = new CustomDirectoryInfoMapper
-            {
-#if !(PORTABLE || DNXCORE50)
-                IgnoreSerializableAttribute = true
-#endif
-            };
-
-            JsonSchema schema = generator.Generate(typeof(DirectoryInfo), true);
-
-            string json = schema.ToString();
-
-            StringAssert.AreEqual(@"{
-  ""id"": ""System.IO.DirectoryInfo"",
-  ""required"": true,
-  ""type"": [
-    ""object"",
-    ""null""
-  ],
-  ""additionalProperties"": false,
-  ""properties"": {
-    ""Name"": {
-      ""required"": true,
-      ""type"": [
-        ""string"",
-        ""null""
-      ]
-    },
-    ""Parent"": {
-      ""$ref"": ""System.IO.DirectoryInfo""
-    },
-    ""Exists"": {
-      ""required"": true,
-      ""type"": ""boolean""
-    },
-    ""FullName"": {
-      ""required"": true,
-      ""type"": [
-        ""string"",
-        ""null""
-      ]
-    },
-    ""Extension"": {
-      ""required"": true,
-      ""type"": [
-        ""string"",
-        ""null""
-      ]
-    },
-    ""CreationTime"": {
-      ""required"": true,
-      ""type"": ""string""
-    },
-    ""CreationTimeUtc"": {
-      ""required"": true,
-      ""type"": ""string""
-    },
-    ""LastAccessTime"": {
-      ""required"": true,
-      ""type"": ""string""
-    },
-    ""LastAccessTimeUtc"": {
-      ""required"": true,
-      ""type"": ""string""
-    },
-    ""LastWriteTime"": {
-      ""required"": true,
-      ""type"": ""string""
-    },
-    ""LastWriteTimeUtc"": {
-      ""required"": true,
-      ""type"": ""string""
-    },
-    ""Attributes"": {
-      ""required"": true,
-      ""type"": ""integer""
-    }
-  }
-}", json);
-
-            DirectoryInfo temp = new DirectoryInfo(@"c:\temp");
-
-            JTokenWriter jsonWriter = new JTokenWriter();
-            JsonSerializer serializer = new JsonSerializer();
-            serializer.Converters.Add(new IsoDateTimeConverter());
-            serializer.ContractResolver = new CustomDirectoryInfoMapper
-            {
-#if !(PORTABLE || DNXCORE50)
-                IgnoreSerializableInterface = true
-#endif
-            };
-            serializer.Serialize(jsonWriter, temp);
-
-            List<string> errors = new List<string>();
-            jsonWriter.Token.Validate(schema, (sender, args) => errors.Add(args.Message));
-
-            Assert.AreEqual(0, errors.Count);
-        }
 #endif
 
         [Test]
@@ -477,7 +376,7 @@ namespace Newtonsoft.Json.Tests.Schema
             generator.UndefinedSchemaIdHandling = UndefinedSchemaIdHandling.UseTypeName;
             generator.ContractResolver = new CamelCasePropertyNamesContractResolver()
             {
-#if !(PORTABLE || DNXCORE50 || PORTABLE40)
+#if !(PORTABLE || DNXCORE50 || PORTABLE40) || NETSTANDARD1_3
                 IgnoreSerializableAttribute = true
 #endif
             };
@@ -522,55 +421,50 @@ namespace Newtonsoft.Json.Tests.Schema
 }", json);
         }
 
-#if !(PORTABLE || DNXCORE50 || PORTABLE40)
+#if !(PORTABLE || DNXCORE50 || PORTABLE40) || NETSTANDARD1_3
         [Test]
         public void GenerateSchemaSerializable()
         {
             JsonSchemaGenerator generator = new JsonSchemaGenerator();
-            generator.ContractResolver = new DefaultContractResolver
+
+            DefaultContractResolver contractResolver = new DefaultContractResolver
             {
                 IgnoreSerializableAttribute = false
             };
+
+            generator.ContractResolver = contractResolver;
             generator.UndefinedSchemaIdHandling = UndefinedSchemaIdHandling.UseTypeName;
 
-            JsonSchema schema = generator.Generate(typeof(Version), true);
+            JsonSchema schema = generator.Generate(typeof(SerializableTestObject), true);
 
             string json = schema.ToString();
 
             StringAssert.AreEqual(@"{
-  ""id"": ""System.Version"",
+  ""id"": ""Newtonsoft.Json.Tests.Schema.SerializableTestObject"",
   ""type"": [
     ""object"",
     ""null""
   ],
   ""additionalProperties"": false,
   ""properties"": {
-    ""_Major"": {
+    ""_name"": {
       ""required"": true,
-      ""type"": ""integer""
-    },
-    ""_Minor"": {
-      ""required"": true,
-      ""type"": ""integer""
-    },
-    ""_Build"": {
-      ""required"": true,
-      ""type"": ""integer""
-    },
-    ""_Revision"": {
-      ""required"": true,
-      ""type"": ""integer""
+      ""type"": [
+        ""string"",
+        ""null""
+      ]
     }
   }
 }", json);
 
             JTokenWriter jsonWriter = new JTokenWriter();
             JsonSerializer serializer = new JsonSerializer();
-            serializer.ContractResolver = new DefaultContractResolver
+            serializer.ContractResolver = contractResolver;
+            serializer.Serialize(jsonWriter, new SerializableTestObject
             {
-                IgnoreSerializableAttribute = false
-            };
-            serializer.Serialize(jsonWriter, new Version(1, 2, 3, 4));
+                Name = "Name!"
+            });
+
 
             List<string> errors = new List<string>();
             jsonWriter.Token.Validate(schema, (sender, args) => errors.Add(args.Message));
@@ -578,17 +472,11 @@ namespace Newtonsoft.Json.Tests.Schema
             Assert.AreEqual(0, errors.Count);
 
             StringAssert.AreEqual(@"{
-  ""_Major"": 1,
-  ""_Minor"": 2,
-  ""_Build"": 3,
-  ""_Revision"": 4
+  ""_name"": ""Name!""
 }", jsonWriter.Token.ToString());
 
-            Version version = jsonWriter.Token.ToObject<Version>(serializer);
-            Assert.AreEqual(1, version.Major);
-            Assert.AreEqual(2, version.Minor);
-            Assert.AreEqual(3, version.Build);
-            Assert.AreEqual(4, version.Revision);
+            SerializableTestObject c = jsonWriter.Token.ToObject<SerializableTestObject>(serializer);
+            Assert.AreEqual("Name!", c.Name);
         }
 #endif
 
@@ -845,6 +733,20 @@ namespace Newtonsoft.Json.Tests.Schema
     public class BulkInsertTask_DSL
     {
     }
+
+#if !(PORTABLE || DNXCORE50 || PORTABLE40) || NETSTANDARD1_3
+    [Serializable]
+    public sealed class SerializableTestObject
+    {
+        private string _name;
+
+        public string Name
+        {
+            get { return _name; }
+            set { _name = value; }
+        }
+    }
+#endif
 }
 
 #pragma warning restore 618
